@@ -4,6 +4,7 @@ package routes
 
 import (
 	"net/http"
+	"task-management-with-gin/controllers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,9 @@ import (
 // SetupRouter configures and returns the main router
 func SetupRouter() *gin.Engine {
 	routes := gin.Default()
+
+	// Create controllers instances
+	userController := controllers.NewUserController()
 
 	// Define your routes here
 	routes.GET("/", func(c *gin.Context) {
@@ -22,6 +26,8 @@ func SetupRouter() *gin.Engine {
 			"message": "pong",
 		})
 	})
+
+	routes.POST("/user/register", userController.Register)
 
 	return routes
 }
