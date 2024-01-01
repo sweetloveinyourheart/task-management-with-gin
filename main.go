@@ -2,31 +2,36 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"net/http"
 	"os"
+	"task-management-with-gin/configs"
+	"task-management-with-gin/helpers"
+	"task-management-with-gin/routes"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		helpers.ErrorPanic(err)
 	}
 
-	port := os.Getenv("PORT")
+	// Init database connections
+	db := configs.InitPostgresConnection()
+	configs.DatabaseMigration(db)
 
-	r := gin.Default()
+	// Initialize the Gin router
+	routes := routes.SetupRouter()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	addr := fmt.Sprintf(":%s", port)
-	if err := r.Run(addr); err != nil {
-		log.Fatal("Error starting the server: ", err)
+	// Start the server
+	serverPort := os.Getenv("PORT")
+	addr := fmt.Sprintf(":%s", serverPort)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: routes,
 	}
+
+	err := server.ListenAndServe()
+	helpers.ErrorPanic(err)
 }

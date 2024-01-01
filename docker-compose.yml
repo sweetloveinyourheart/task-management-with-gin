@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: task-management
+    ports:
+      - "5432:5432"
+    networks:
+      - task-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+networks:
+  task-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
