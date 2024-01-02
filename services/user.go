@@ -14,11 +14,17 @@ import (
 
 type IUserService interface {
 	CreateNewUser(userData dtos.RegisterDTO) (bool, error)
+	SignIn(userData dtos.SignInDTO) (SignInResponse, error)
 }
 
 type UserService struct {
 	Validate *validator.Validate
 	Db       *gorm.DB
+}
+
+type SignInResponse struct {
+	AccessToken  string
+	RefreshToken string
 }
 
 func NewUserService() IUserService {
@@ -34,15 +40,15 @@ func NewUserService() IUserService {
 var user models.User
 
 func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
+	validatorError := u.Validate.Struct(userData)
+	if validatorError != nil {
+		return false, validatorError
+	}
+
 	existedUser := u.Db.Where("email = ?", userData.Email).First(&user)
 	if existedUser.RowsAffected > 0 {
 		// User already exists, construct and return an error
 		return false, errors.New("user already exists")
-	}
-
-	validatorError := u.Validate.Struct(userData)
-	if validatorError != nil {
-		return false, validatorError
 	}
 
 	// Hash the password
@@ -63,4 +69,33 @@ func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (u *UserService) SignIn(userData dtos.SignInDTO) (SignInResponse, error) {
+	validatorError := u.Validate.Struct(userData)
+	if validatorError != nil {
+		return SignInResponse{}, validatorError
+	}
+
+	userQuery := u.Db.Where("email = ?", userData.Email).First(&user)
+	if userQuery.RowsAffected == 0 {
+		return SignInResponse{}, errors.New("email or password is not valid")
+	}
+
+	isValidPassword := utils.CheckPasswordHash(userData.Password, user.Password)
+	if !isValidPassword {
+		return SignInResponse{}, errors.New("email or password is not valid")
+	}
+
+	// Generate Token
+	accessToken, errAccessToken := utils.GenerateToken(user, configs.JwtSecret, 15*60)
+	helpers.ErrorPanic(errAccessToken)
+
+	refreshToken, errRefreshToken := utils.GenerateToken(user, configs.JwtSecret, 3600)
+	helpers.ErrorPanic(errRefreshToken)
+
+	return SignInResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
