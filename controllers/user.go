@@ -24,12 +24,12 @@ func NewUserController() *UserController {
 	}
 }
 
-func (controller *UserController) Register(ctx *gin.Context) {
+func (c *UserController) Register(ctx *gin.Context) {
 	newUserData := dtos.RegisterDTO{}
 	bindErr := ctx.ShouldBindJSON(&newUserData)
 	helpers.ErrorPanic(bindErr)
 
-	success, err := controller.UserService.CreateNewUser(newUserData)
+	success, err := c.UserService.CreateNewUser(newUserData)
 	if err != nil {
 		// Check if it's a validation error
 		validationError, ok := err.(validator.ValidationErrors)
@@ -48,4 +48,31 @@ func (controller *UserController) Register(ctx *gin.Context) {
 
 	// Send a success response with status code 201
 	ctx.JSON(http.StatusCreated, gin.H{"success": success})
+}
+
+func (c *UserController) SignIn(ctx *gin.Context) {
+	signInData := dtos.SignInDTO{}
+	bindErr := ctx.ShouldBindJSON(&signInData)
+	helpers.ErrorPanic(bindErr)
+
+	tokens, err := c.UserService.SignIn(signInData)
+	if err != nil {
+		// Check if it's a validation error
+		validationError, ok := err.(validator.ValidationErrors)
+		if ok {
+			helpers.HandleValidationError(ctx, validationError)
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"success": false,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"error": nil,
+		"data":  tokens,
+	})
 }

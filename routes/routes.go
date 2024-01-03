@@ -28,6 +28,7 @@ func SetupRouter() *gin.Engine {
 	})
 
 	routes.POST("/user/register", userController.Register)
+	routes.POST("/user/sign-in", userController.SignIn)
 
 	return routes
 }

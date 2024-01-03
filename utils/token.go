@@ -7,8 +7,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(payload interface{}, secretKey string, ttl time.Duration) (string, error) {
-	token := jwt.New(jwt.SigningMethodES256)
+type TokenPayload struct {
+	Id    uint
+	Email string
+}
+
+func GenerateToken(payload TokenPayload, secretKey string, ttl time.Duration) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
 
 	now := time.Now().UTC()
 	claim := token.Claims.(jwt.MapClaims)

@@ -87,11 +87,16 @@ func (u *UserService) SignIn(userData dtos.SignInDTO) (SignInResponse, error) {
 		return SignInResponse{}, errors.New("email or password is not valid")
 	}
 
+	payload := utils.TokenPayload{
+		Id:    user.ID,
+		Email: user.Email,
+	}
+
 	// Generate Token
-	accessToken, errAccessToken := utils.GenerateToken(user, configs.JwtSecret, 15*60)
+	accessToken, errAccessToken := utils.GenerateToken(payload, configs.JwtSecret, 15*60)
 	helpers.ErrorPanic(errAccessToken)
 
-	refreshToken, errRefreshToken := utils.GenerateToken(user, configs.JwtSecret, 3600)
+	refreshToken, errRefreshToken := utils.GenerateToken(payload, configs.JwtSecret, 3600)
 	helpers.ErrorPanic(errRefreshToken)
 
 	return SignInResponse{
