@@ -1,12 +1,14 @@
 package services
 
 import (
-	"errors"
+	"fmt"
 	"task-management-with-gin/configs"
 	"task-management-with-gin/dtos"
 	"task-management-with-gin/helpers"
 	"task-management-with-gin/models"
+	"task-management-with-gin/responses"
 	"task-management-with-gin/utils"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -14,17 +16,13 @@ import (
 
 type IUserService interface {
 	CreateNewUser(userData dtos.RegisterDTO) (bool, error)
-	SignIn(userData dtos.SignInDTO) (SignInResponse, error)
+	SignIn(userData dtos.SignInDTO) (responses.SignInResponse, error)
+	GetUserProfile(userId uint) (responses.UserProfile, error)
 }
 
 type UserService struct {
 	Validate *validator.Validate
 	Db       *gorm.DB
-}
-
-type SignInResponse struct {
-	AccessToken  string
-	RefreshToken string
 }
 
 func NewUserService() IUserService {
@@ -37,18 +35,18 @@ func NewUserService() IUserService {
 	}
 }
 
-var user models.User
-
 func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
 	validatorError := u.Validate.Struct(userData)
 	if validatorError != nil {
 		return false, validatorError
 	}
 
+	var user models.User
+
 	existedUser := u.Db.Where("email = ?", userData.Email).First(&user)
 	if existedUser.RowsAffected > 0 {
 		// User already exists, construct and return an error
-		return false, errors.New("user already exists")
+		return false, fmt.Errorf("user already exists")
 	}
 
 	// Hash the password
@@ -61,6 +59,7 @@ func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
 		FullName: &userData.FullName,
 		Email:    userData.Email,
 		Password: hashedPassword,
+		Username: utils.GenerateRandomUsername("user_"),
 	}
 
 	createResult := u.Db.Create(&newUser)
@@ -71,20 +70,22 @@ func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
 	return true, nil
 }
 
-func (u *UserService) SignIn(userData dtos.SignInDTO) (SignInResponse, error) {
+func (u *UserService) SignIn(userData dtos.SignInDTO) (responses.SignInResponse, error) {
 	validatorError := u.Validate.Struct(userData)
 	if validatorError != nil {
-		return SignInResponse{}, validatorError
+		return responses.SignInResponse{}, validatorError
 	}
+
+	var user models.User
 
 	userQuery := u.Db.Where("email = ?", userData.Email).First(&user)
 	if userQuery.RowsAffected == 0 {
-		return SignInResponse{}, errors.New("email or password is not valid")
+		return responses.SignInResponse{}, fmt.Errorf("email or password is not valid")
 	}
 
 	isValidPassword := utils.CheckPasswordHash(userData.Password, user.Password)
 	if !isValidPassword {
-		return SignInResponse{}, errors.New("email or password is not valid")
+		return responses.SignInResponse{}, fmt.Errorf("email or password is not valid")
 	}
 
 	payload := utils.TokenPayload{
@@ -93,14 +94,30 @@ func (u *UserService) SignIn(userData dtos.SignInDTO) (SignInResponse, error) {
 	}
 
 	// Generate Token
-	accessToken, errAccessToken := utils.GenerateToken(payload, configs.JwtSecret, 15*60)
+	accessToken, errAccessToken := utils.GenerateToken(payload, configs.JwtSecret, 15*time.Minute)
 	helpers.ErrorPanic(errAccessToken)
 
-	refreshToken, errRefreshToken := utils.GenerateToken(payload, configs.JwtSecret, 3600)
+	refreshToken, errRefreshToken := utils.GenerateToken(payload, configs.JwtSecret, 24*time.Hour)
 	helpers.ErrorPanic(errRefreshToken)
 
-	return SignInResponse{
+	return responses.SignInResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (u *UserService) GetUserProfile(userId uint) (responses.UserProfile, error) {
+	var user models.User
+
+	userQuery := u.Db.Where("id = ?", userId).First(&user)
+	if userQuery.RowsAffected == 0 {
+		return responses.UserProfile{}, fmt.Errorf("missing Authorization header")
+	}
+
+	return responses.UserProfile{
+		Id:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+		FullName: *user.FullName,
 	}, nil
 }

@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"task-management-with-gin/dtos"
 	"task-management-with-gin/helpers"
+	"task-management-with-gin/middlewares"
 	"task-management-with-gin/services"
 
 	"github.com/gin-gonic/gin"
@@ -74,5 +76,39 @@ func (c *UserController) SignIn(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"error": nil,
 		"data":  tokens,
+	})
+}
+
+func (c *UserController) GetUserProfile(ctx *gin.Context) {
+	user, exists := ctx.Get("user")
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   fmt.Errorf("unauthorized").Error(),
+			"success": false,
+		})
+		return
+	}
+
+	authUser, ok := user.(middlewares.AuthenticatedUser)
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   fmt.Errorf("invalid user type").Error(),
+			"success": false,
+		})
+		return
+	}
+
+	profile, err := c.UserService.GetUserProfile(authUser.Id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   fmt.Errorf("error getting user profile").Error(),
+			"success": false,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"error": nil,
+		"data":  profile,
 	})
 }

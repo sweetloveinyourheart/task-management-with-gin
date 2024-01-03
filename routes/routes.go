@@ -3,8 +3,8 @@
 package routes
 
 import (
-	"net/http"
 	"task-management-with-gin/controllers"
+	"task-management-with-gin/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,16 +17,7 @@ func SetupRouter() *gin.Engine {
 	userController := controllers.NewUserController()
 
 	// Define your routes here
-	routes.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
-	})
-
-	routes.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
+	routes.GET("/user/profile", middlewares.AuthGuard, userController.GetUserProfile)
 	routes.POST("/user/register", userController.Register)
 	routes.POST("/user/sign-in", userController.SignIn)
 
