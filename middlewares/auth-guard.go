@@ -37,19 +37,19 @@ func AuthGuard(ctx *gin.Context) {
 
 	token, err := extractBearerToken(ctx.Request)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
 	sub, err := utils.ValidateJwtToken(token, configs.JwtSecret)
 	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
 		return
 	}
 
 	userData, ok := sub.(map[string]interface{})
 	if !ok {
-		ctx.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": "cannot get user data"})
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "cannot get user data"})
 		return
 	}
 
@@ -57,7 +57,7 @@ func AuthGuard(ctx *gin.Context) {
 	email, emailOK := userData["Email"].(string)
 
 	if !idOK || !emailOK {
-		ctx.JSON(http.StatusForbidden, gin.H{"status": "fail", "message": "invalid data format"})
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "invalid data format"})
 		return
 	}
 

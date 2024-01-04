@@ -112,3 +112,54 @@ func (c *UserController) GetUserProfile(ctx *gin.Context) {
 		"data":  profile,
 	})
 }
+
+func (c *UserController) UpdateUserProfile(ctx *gin.Context) {
+	user, exists := ctx.Get("user")
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   fmt.Errorf("unauthorized").Error(),
+			"success": false,
+		})
+		return
+	}
+
+	authUser, ok := user.(middlewares.AuthenticatedUser)
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   fmt.Errorf("invalid user type").Error(),
+			"success": false,
+		})
+		return
+	}
+
+	userData := dtos.UpdateProfileDTO{}
+	err := ctx.ShouldBindJSON(&userData)
+	helpers.ErrorPanic(err)
+
+	if err != nil {
+		// Check if it's a validation error
+		validationError, ok := err.(validator.ValidationErrors)
+		if ok {
+			helpers.HandleValidationError(ctx, validationError)
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"success": false,
+		})
+		return
+	}
+
+	success, err := c.UserService.UpdateUserProfile(authUser.Id, userData)
+	if !success {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"success": success,
+		})
+		return
+	}
+
+	// Send a success response with status code 201
+	ctx.JSON(http.StatusCreated, gin.H{"success": success})
+}

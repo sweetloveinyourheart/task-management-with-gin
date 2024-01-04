@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"task-management-with-gin/configs"
 	"task-management-with-gin/dtos"
@@ -18,6 +19,7 @@ type IUserService interface {
 	CreateNewUser(userData dtos.RegisterDTO) (bool, error)
 	SignIn(userData dtos.SignInDTO) (responses.SignInResponse, error)
 	GetUserProfile(userId uint) (responses.UserProfile, error)
+	UpdateUserProfile(userId uint, userData dtos.UpdateProfileDTO) (bool, error)
 }
 
 type UserService struct {
@@ -56,7 +58,7 @@ func (u *UserService) CreateNewUser(userData dtos.RegisterDTO) (bool, error) {
 	}
 
 	newUser := models.User{
-		FullName: &userData.FullName,
+		FullName: sql.NullString{String: userData.FullName, Valid: true},
 		Email:    userData.Email,
 		Password: hashedPassword,
 		Username: utils.GenerateRandomUsername("user_"),
@@ -118,6 +120,33 @@ func (u *UserService) GetUserProfile(userId uint) (responses.UserProfile, error)
 		Id:       user.ID,
 		Email:    user.Email,
 		Username: user.Username,
-		FullName: *user.FullName,
+		FullName: user.FullName.String,
 	}, nil
+}
+
+func (u *UserService) UpdateUserProfile(userId uint, userData dtos.UpdateProfileDTO) (bool, error) {
+	var user models.User
+
+	userQuery := u.Db.Where("id = ?", userId).First(&user)
+	if userQuery.RowsAffected == 0 {
+		return false, fmt.Errorf("missing Authorization header")
+	}
+
+	fmt.Println(userData.Username, userData.FullName)
+
+	if userData.Username != "" {
+		user.Username = userData.Username
+	}
+
+	if userData.FullName != "" {
+		user.FullName = sql.NullString{String: userData.FullName, Valid: true}
+	}
+
+	saveResult := u.Db.Save(&user)
+	if saveResult.Error != nil {
+		helpers.ErrorPanic(saveResult.Error)
+		return false, nil
+	}
+
+	return true, nil
 }
