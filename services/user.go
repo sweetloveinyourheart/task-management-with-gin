@@ -132,8 +132,6 @@ func (u *UserService) UpdateUserProfile(userId uint, userData dtos.UpdateProfile
 		return false, fmt.Errorf("missing Authorization header")
 	}
 
-	fmt.Println(userData.Username, userData.FullName)
-
 	if userData.Username != "" {
 		user.Username = userData.Username
 	}
