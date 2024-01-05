@@ -1,13 +1,26 @@
-import { Button, Divider, Form, Input, Typography } from "antd";
+import { Alert, Button, Divider, Form, Input, Space, Typography } from "antd";
 import { LockOutlined, UserOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
+import _ from 'lodash'
+import { useState } from "react";
+
+import * as userService from "../services/user.service";
 
 function SignUpPage() {
+    const [error, setError] = useState<string | null>(null)
+
     const navigate = useNavigate();
 
-    const onFinish = (values: any) => {
+    const onFinish = async (values: any) => {
         // Handle form submission
-        console.log('Received values:', values);
+        const newUserData: any = _.omit(values, ['confirm'])
+        const res = await userService.register(newUserData)
+        if (res.error) {
+            setError(res.error)
+            return;
+        }
+
+        navigate("/sign-in")
     };
 
     const switchToLogin = () => navigate("/sign-in")
@@ -78,6 +91,15 @@ function SignUpPage() {
                     >
                         <Input prefix={<UserOutlined />} placeholder="Your full name" />
                     </Form.Item>
+
+                    {error
+                        ? (
+                            <Space direction="vertical" style={{ width: '100%', marginBottom: 24 }}>
+                                <Alert message={error} type="error" />
+                            </Space>
+                        )
+                        : null
+                    }
 
                     <Form.Item>
                         <Button block type="primary" htmlType="submit">
