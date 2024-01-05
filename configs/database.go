@@ -21,13 +21,16 @@ func InitPostgresConnection() *gorm.DB {
 
 	sqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbName)
 	db, err := gorm.Open(postgres.Open(sqlInfo), &gorm.Config{})
-	helpers.ErrorPanic(err)
+
+	if err != nil {
+		helpers.ErrorPanic(err)
+	}
 
 	DB = db
 	return db
 }
 
-func DatabaseMigration(db *gorm.DB) {
+func MigrateDatabase(db *gorm.DB) {
 	// Migrate the schema
 	err := db.AutoMigrate(
 		&models.User{},

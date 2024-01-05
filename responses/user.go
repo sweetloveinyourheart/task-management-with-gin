@@ -1,13 +1,13 @@
 package responses
 
 type SignInResponse struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type UserProfile struct {
-	Id       uint
-	Email    string
-	Username string
-	FullName string
+	Id       uint   `json:"id"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	FullName string `json:"full_name"`
 }

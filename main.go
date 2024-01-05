@@ -19,7 +19,7 @@ func main() {
 
 	// Init database connections
 	db := configs.InitPostgresConnection()
-	configs.DatabaseMigration(db)
+	configs.MigrateDatabase(db)
 
 	// Initialize the Gin router
 	routes := routes.SetupRouter()
