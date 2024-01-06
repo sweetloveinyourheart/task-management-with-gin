@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"task-management-with-gin/configs"
 	"task-management-with-gin/dtos"
 	"task-management-with-gin/models"
@@ -12,7 +13,7 @@ import (
 
 type IBoardService interface {
 	CreateNewBoard(creatorId uint, newBoardData dtos.NewBoardDTO) (bool, error)
-	AddBoardMember(members dtos.AddBoardMembers) (bool, error)
+	AddBoardMember(boardId uint, members dtos.AddBoardMembers) (bool, error)
 }
 
 type BoardService struct {
@@ -59,10 +60,29 @@ func (b *BoardService) CreateNewBoard(creatorId uint, newBoardData dtos.NewBoard
 	return true, nil
 }
 
-func (b *BoardService) AddBoardMember(members dtos.AddBoardMembers) (bool, error) {
+func (b *BoardService) AddBoardMember(boardId uint, members dtos.AddBoardMembers) (bool, error) {
 	validatorError := b.Validate.Struct(members)
 	if validatorError != nil {
 		return false, validatorError
+	}
+
+	var users []models.User
+	findMemErr := b.Db.Find(&users, members.Members).Error
+	if findMemErr != nil {
+		return false, fmt.Errorf("cannot add members")
+	}
+
+	var board models.Board
+	findBoardErr := b.Db.First(&board, boardId).Error
+	if findBoardErr != nil {
+		return false, fmt.Errorf("cannot add members")
+	}
+
+	board.Members = append(board.Members, users...)
+
+	// Save the updated board to the database
+	if saveErr := b.Db.Save(&board).Error; saveErr != nil {
+		return false, saveErr
 	}
 
 	return true, nil

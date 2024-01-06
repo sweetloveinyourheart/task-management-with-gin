@@ -107,7 +107,7 @@ func (c *UserController) RefreshToken(ctx *gin.Context) {
 func (c *UserController) GetUserProfile(ctx *gin.Context) {
 	user, exists := ctx.Get("user")
 	if !exists {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error":   fmt.Errorf("unauthorized").Error(),
 			"success": false,
 		})
@@ -116,7 +116,7 @@ func (c *UserController) GetUserProfile(ctx *gin.Context) {
 
 	authUser, ok := user.(middlewares.AuthenticatedUser)
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error":   fmt.Errorf("invalid user type").Error(),
 			"success": false,
 		})
@@ -125,7 +125,7 @@ func (c *UserController) GetUserProfile(ctx *gin.Context) {
 
 	profile, err := c.UserService.GetUserProfile(authUser.Id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		ctx.JSON(http.StatusForbidden, gin.H{
 			"error":   fmt.Errorf("error getting user profile").Error(),
 			"success": false,
 		})

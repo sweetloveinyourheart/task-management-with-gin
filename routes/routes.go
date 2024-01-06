@@ -24,6 +24,7 @@ func SetupRouter() *gin.Engine {
 
 	// Create controllers instances
 	userController := controllers.NewUserController()
+	boardController := controllers.NewBoardController()
 
 	// Define your routes here
 	routes.GET("/user/profile", middlewares.AuthGuard, userController.GetUserProfile)
@@ -31,6 +32,9 @@ func SetupRouter() *gin.Engine {
 	routes.POST("/user/register", userController.Register)
 	routes.POST("/user/sign-in", userController.SignIn)
 	routes.PUT("/user/profile", middlewares.AuthGuard, userController.UpdateUserProfile)
+
+	routes.POST("/board/new", middlewares.AuthGuard, boardController.NewBoard)
+	routes.POST("/board/add-members", middlewares.AuthGuard, boardController.NewBoardMembers)
 
 	return routes
 }
