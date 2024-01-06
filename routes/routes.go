@@ -14,8 +14,13 @@ import (
 func SetupRouter() *gin.Engine {
 	routes := gin.Default()
 
-	// CORS middleware
-	routes.Use(cors.Default())
+	// CORS middleware with custom configuration
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	config.AllowHeaders = append(config.AllowHeaders, "Authorization") // Add Authorization header
+
+	routes.Use(cors.New(config))
 
 	// Create controllers instances
 	userController := controllers.NewUserController()

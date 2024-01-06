@@ -12,7 +12,8 @@ import (
 )
 
 type AuthenticatedUser struct {
-	utils.TokenPayload
+	Id    uint
+	Email string
 }
 
 func extractBearerToken(r *http.Request) (string, error) {
@@ -46,7 +47,7 @@ func AuthGuard(ctx *gin.Context) {
 		return
 	}
 
-	var userData utils.TokenPayload
+	var userData AuthenticatedUser
 	mapErr := mapstructure.Decode(sub, &userData)
 	if mapErr != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "cannot get user data"})
