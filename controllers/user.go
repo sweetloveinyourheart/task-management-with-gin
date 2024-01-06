@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"task-management-with-gin/dtos"
 	"task-management-with-gin/helpers"
+	"task-management-with-gin/helpers/exceptions"
 	"task-management-with-gin/middlewares"
 	"task-management-with-gin/services"
 
@@ -41,10 +41,7 @@ func (c *UserController) Register(ctx *gin.Context) {
 		}
 
 		// If it's not a validation error, handle it as a general error
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": success,
-		})
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
@@ -66,10 +63,7 @@ func (c *UserController) SignIn(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": false,
-		})
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
@@ -91,10 +85,7 @@ func (c *UserController) RefreshToken(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": false,
-		})
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
@@ -107,28 +98,19 @@ func (c *UserController) RefreshToken(ctx *gin.Context) {
 func (c *UserController) GetUserProfile(ctx *gin.Context) {
 	user, exists := ctx.Get("user")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error":   fmt.Errorf("unauthorized").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Unauthorized")
 		return
 	}
 
 	authUser, ok := user.(middlewares.AuthenticatedUser)
 	if !ok {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error":   fmt.Errorf("invalid user type").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Invalid user type")
 		return
 	}
 
 	profile, err := c.UserService.GetUserProfile(authUser.Id)
 	if err != nil {
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error":   fmt.Errorf("error getting user profile").Error(),
-			"success": false,
-		})
+		exceptions.ForbiddenResponse(ctx, "Error getting user profile")
 		return
 	}
 
@@ -141,19 +123,13 @@ func (c *UserController) GetUserProfile(ctx *gin.Context) {
 func (c *UserController) UpdateUserProfile(ctx *gin.Context) {
 	user, exists := ctx.Get("user")
 	if !exists {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   fmt.Errorf("unauthorized").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Unauthorized")
 		return
 	}
 
 	authUser, ok := user.(middlewares.AuthenticatedUser)
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   fmt.Errorf("invalid user type").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Invalid user type")
 		return
 	}
 
@@ -169,19 +145,13 @@ func (c *UserController) UpdateUserProfile(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": false,
-		})
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
 	success, err := c.UserService.UpdateUserProfile(authUser.Id, userData)
 	if !success {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": success,
-		})
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 

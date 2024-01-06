@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"task-management-with-gin/dtos"
 	"task-management-with-gin/helpers"
+	"task-management-with-gin/helpers/exceptions"
 	"task-management-with-gin/middlewares"
 	"task-management-with-gin/services"
 
@@ -28,42 +28,37 @@ func NewBoardController() *BoardController {
 }
 
 func (c *BoardController) NewBoard(ctx *gin.Context) {
+	// Verify user authentication
 	user, exists := ctx.Get("user")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error":   fmt.Errorf("unauthorized").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Unauthorized")
 		return
 	}
 
 	authUser, ok := user.(middlewares.AuthenticatedUser)
 	if !ok {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error":   fmt.Errorf("invalid user type").Error(),
-			"success": false,
-		})
+		exceptions.UnauthorizedResponse(ctx, "Invalid user type")
 		return
 	}
 
-	newBoard := dtos.NewBoardDTO{}
-	bindErr := ctx.ShouldBindJSON(&newBoard)
-	helpers.ErrorPanic(bindErr)
+	// Bind JSON request to newBoard DTO
+	var newBoard dtos.NewBoardDTO
+	if bindErr := ctx.ShouldBindJSON(&newBoard); bindErr != nil {
+		helpers.ErrorPanic(bindErr)
+		return
+	}
 
+	// Call service to create a new board
 	success, err := c.BoardService.CreateNewBoard(authUser.Id, newBoard)
 	if err != nil {
-		// Check if it's a validation error
-		validationError, ok := err.(validator.ValidationErrors)
-		if ok {
+		// Handle validation errors
+		if validationError, ok := err.(validator.ValidationErrors); ok {
 			helpers.HandleValidationError(ctx, validationError)
 			return
 		}
 
-		// If it's not a validation error, handle it as a general error
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": success,
-		})
+		// Handle general errors
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
@@ -72,41 +67,38 @@ func (c *BoardController) NewBoard(ctx *gin.Context) {
 }
 
 func (c *BoardController) NewBoardMembers(ctx *gin.Context) {
+	// Extract boardId from query parameters
 	boardId := ctx.Query("board-id")
 	if boardId == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   fmt.Errorf("board-id is required").Error(),
-			"success": false,
-		})
+		exceptions.BadRequestResponse(ctx, "board-id is required")
 		return
 	}
 
-	// Convert string to uint
+	// Parse and validate boardId
 	boardIdUint, err := strconv.ParseUint(boardId, 10, 64)
 	if err != nil {
-		// Handle the error if the conversion fails
-		fmt.Printf("Error converting string to uint: %v\n", err)
+		exceptions.BadRequestResponse(ctx, "Invalid board-id format")
 		return
 	}
 
-	members := dtos.AddBoardMembers{}
-	bindErr := ctx.ShouldBindJSON(&members)
-	helpers.ErrorPanic(bindErr)
+	// Bind JSON request to members DTO
+	var members dtos.AddBoardMembers
+	if bindErr := ctx.ShouldBindJSON(&members); bindErr != nil {
+		helpers.ErrorPanic(bindErr)
+		return
+	}
 
+	// Call service to add board members
 	success, err := c.BoardService.AddBoardMember(uint(boardIdUint), members)
 	if err != nil {
-		// Check if it's a validation error
-		validationError, ok := err.(validator.ValidationErrors)
-		if ok {
+		// Handle validation errors
+		if validationError, ok := err.(validator.ValidationErrors); ok {
 			helpers.HandleValidationError(ctx, validationError)
 			return
 		}
 
-		// If it's not a validation error, handle it as a general error
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
-			"success": success,
-		})
+		// Handle general errors
+		exceptions.BadRequestResponse(ctx, err.Error())
 		return
 	}
 
