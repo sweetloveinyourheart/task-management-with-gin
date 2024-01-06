@@ -18,6 +18,7 @@ import (
 type IUserService interface {
 	CreateNewUser(userData dtos.RegisterDTO) (bool, error)
 	SignIn(userData dtos.SignInDTO) (responses.SignInResponse, error)
+	RefreshToken(refreshToken string) (responses.RefreshTokenResponse, error)
 	GetUserProfile(userId uint) (responses.UserProfile, error)
 	UpdateUserProfile(userId uint, userData dtos.UpdateProfileDTO) (bool, error)
 }
@@ -106,6 +107,31 @@ func (u *UserService) SignIn(userData dtos.SignInDTO) (responses.SignInResponse,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (u *UserService) RefreshToken(refreshToken string) (responses.RefreshTokenResponse, error) {
+	sub, err := utils.ValidateJwtToken(refreshToken, configs.JwtSecret)
+	if err != nil {
+		return responses.RefreshTokenResponse{AccessToken: ""}, err
+	}
+
+	payload, ok := sub.(map[string]interface{})
+	if !ok {
+		return responses.RefreshTokenResponse{AccessToken: ""}, err
+	}
+
+	tokenPayload := utils.TokenPayload{
+		Id:    uint(payload["Id"].(float64)), // Assuming Id is a uint field
+		Email: payload["Email"].(string),
+	}
+
+	// Generate Token
+	accessToken, err := utils.GenerateToken(tokenPayload, configs.JwtSecret, 15*time.Minute)
+	if err != nil {
+		return responses.RefreshTokenResponse{AccessToken: ""}, err
+	}
+
+	return responses.RefreshTokenResponse{AccessToken: accessToken}, nil
 }
 
 func (u *UserService) GetUserProfile(userId uint) (responses.UserProfile, error) {

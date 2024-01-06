@@ -8,6 +8,7 @@ import (
 	"task-management-with-gin/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 type AuthenticatedUser struct {
@@ -33,8 +34,6 @@ func extractBearerToken(r *http.Request) (string, error) {
 }
 
 func AuthGuard(ctx *gin.Context) {
-	var token string
-
 	token, err := extractBearerToken(ctx.Request)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
@@ -47,25 +46,14 @@ func AuthGuard(ctx *gin.Context) {
 		return
 	}
 
-	userData, ok := sub.(map[string]interface{})
-	if !ok {
+	var userData utils.TokenPayload
+	mapErr := mapstructure.Decode(sub, &userData)
+	if mapErr != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "cannot get user data"})
 		return
 	}
 
-	id, idOK := userData["Id"].(float64)
-	email, emailOK := userData["Email"].(string)
-
-	if !idOK || !emailOK {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "invalid data format"})
-		return
-	}
-
-	var authenticatedUser AuthenticatedUser
-	authenticatedUser.Id = uint(id)
-	authenticatedUser.Email = email
-
-	ctx.Set("user", authenticatedUser)
-
+	ctx.Set("user", userData)
 	ctx.Next()
+
 }

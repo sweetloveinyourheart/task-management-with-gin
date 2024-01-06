@@ -6,6 +6,7 @@
         "gonic",
         "gorm",
         "joho",
+        "mapstructure",
         "sslmode"
     ]
 }

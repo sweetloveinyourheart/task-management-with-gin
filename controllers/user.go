@@ -79,6 +79,31 @@ func (c *UserController) SignIn(ctx *gin.Context) {
 	})
 }
 
+func (c *UserController) RefreshToken(ctx *gin.Context) {
+	refreshToken := ctx.Query("refresh-token")
+
+	tokens, err := c.UserService.RefreshToken(refreshToken)
+	if err != nil {
+		// Check if it's a validation error
+		validationError, ok := err.(validator.ValidationErrors)
+		if ok {
+			helpers.HandleValidationError(ctx, validationError)
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"success": false,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"error": nil,
+		"data":  tokens,
+	})
+}
+
 func (c *UserController) GetUserProfile(ctx *gin.Context) {
 	user, exists := ctx.Get("user")
 	if !exists {

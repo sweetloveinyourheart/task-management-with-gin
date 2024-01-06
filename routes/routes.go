@@ -22,6 +22,7 @@ func SetupRouter() *gin.Engine {
 
 	// Define your routes here
 	routes.GET("/user/profile", middlewares.AuthGuard, userController.GetUserProfile)
+	routes.GET("/user/refresh-token", userController.RefreshToken)
 	routes.POST("/user/register", userController.Register)
 	routes.POST("/user/sign-in", userController.SignIn)
 	routes.PUT("/user/profile", middlewares.AuthGuard, userController.UpdateUserProfile)
