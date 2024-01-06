@@ -12,5 +12,7 @@ type Card struct {
 	Description string `gorm:"type:text"`
 	Position    *int   `gorm:"type:int"`
 	DueDate     *time.Time
-	List        List `gorm:"embedded"`
+	ListId      uint
+	List        List `gorm:"foreignKey:ListId"`
+	Comments    []Comment
 }

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var database *gorm.DB
 
 func InitPostgresConnection() *gorm.DB {
 	host := os.Getenv("POSTGRES_HOST")
@@ -26,7 +26,7 @@ func InitPostgresConnection() *gorm.DB {
 		helpers.ErrorPanic(err)
 	}
 
-	DB = db
+	database = db
 	return db
 }
 
@@ -46,5 +46,5 @@ func MigrateDatabase(db *gorm.DB) {
 
 // Using this function to get a connection, you can create your connection pool here.
 func GetDB() *gorm.DB {
-	return DB
+	return database
 }

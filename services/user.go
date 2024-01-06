@@ -30,7 +30,7 @@ type UserService struct {
 
 func NewUserService() IUserService {
 	db := configs.GetDB()
-	validate := utils.Validate
+	validate := utils.GetValidator()
 
 	return &UserService{
 		Validate: validate,

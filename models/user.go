@@ -12,4 +12,6 @@ type User struct {
 	Username string         `gorm:"type:varchar(50);not null;unique;index:idx_name"`
 	Password string         `gorm:"type:varchar(100);not null"`
 	FullName sql.NullString `gorm:"type:varchar(100)"`
+	Boards   []Board
+	Comments []Comment
 }
