@@ -1,6 +1,6 @@
 // Header.tsx
-import { Layout, Avatar, Row, Col, Flex, Typography, Dropdown, MenuProps, Button } from 'antd';
-import { DingdingOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Avatar, Row, Col, Flex, Typography, Dropdown, Button } from 'antd';
+import { DingdingOutlined, LogoutOutlined } from '@ant-design/icons';
 import GlassEffect from './GlassEffect';
 import { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
