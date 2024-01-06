@@ -61,7 +61,22 @@ async function signIn(account: SignInData): Promise<SignInResponse> {
     }
 }
 
+async function refreshToken(): Promise<Tokens | null> {
+    try {
+        const refresh_token = localStorage.getItem('refresh_token')
+        if(!refresh_token) return null
+
+        const { data } = await axios.get(`/user/refresh-token?refresh-token=${refresh_token}`)
+
+        const tokens: Tokens = _.get(data, ['data'], null)
+        return tokens
+    } catch (error) {
+        return null
+    }
+}
+
 export {
     register,
-    signIn
+    signIn,
+    refreshToken
 }

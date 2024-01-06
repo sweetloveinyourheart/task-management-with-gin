@@ -2,14 +2,20 @@ import { Alert, Button, Divider, Form, Input, Space, Typography } from "antd";
 import { LockOutlined, UserOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import _ from 'lodash'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import * as userService from "../services/user.service";
+import { useAppSelector } from "../redux/hooks";
 
 function SignUpPage() {
     const [error, setError] = useState<string | null>(null)
 
+    const { accessToken } = useAppSelector(state => state.auth)
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if(accessToken) navigate('/dashboard')
+    }, [accessToken])
 
     const onFinish = async (values: any) => {
         // Handle form submission

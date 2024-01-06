@@ -2,17 +2,22 @@ import { Alert, Button, Divider, Form, Input, Space, Typography } from "antd";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import _ from 'lodash'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import * as userService from "../services/user.service";
 import { storeAccessToken } from "../redux/slices/authSlice";
-import { useAppDispatch } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
 function SignInPage() {
     const [error, setError] = useState<string | null>(null)
 
-    const navigate = useNavigate();
+    const { accessToken } = useAppSelector(state => state.auth)
     const dispatch = useAppDispatch()
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if(accessToken) navigate('/dashboard')
+    }, [accessToken])
 
     const onFinish = async (values: any) => {
         // Handle form submission
