@@ -1,6 +1,10 @@
+import AppHeader from "../components/Header";
+
 function DashboardPage() {
-    return (  
-        <h1>Dashboard</h1>
+    return (
+        <>
+            <AppHeader />
+        </>
     );
 }
 

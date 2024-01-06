@@ -1,5 +1,6 @@
 import axios from "../helpers/axios"
 import _ from 'lodash'
+import { User } from "../redux/slices/authSlice"
 
 interface SignInData {
     email: string
@@ -48,6 +49,11 @@ async function signIn(account: SignInData): Promise<SignInResponse> {
         const { data } = await axios.post('/user/sign-in', account)
 
         const tokens: Tokens = _.get(data, ['data'], null)
+        if (tokens) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${tokens.access_token}`;
+            localStorage.setItem('refresh_token', tokens.refresh_token)
+        }
+
         const error: string | null = _.get(data, ['data', 'error'], null)
 
         return { tokens, error }
@@ -64,12 +70,28 @@ async function signIn(account: SignInData): Promise<SignInResponse> {
 async function refreshToken(): Promise<Tokens | null> {
     try {
         const refresh_token = localStorage.getItem('refresh_token')
-        if(!refresh_token) return null
+        if (!refresh_token) return null
 
         const { data } = await axios.get(`/user/refresh-token?refresh-token=${refresh_token}`)
 
         const tokens: Tokens = _.get(data, ['data'], null)
+        if (tokens) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${tokens.access_token}`;
+        }
+
         return tokens
+    } catch (error) {
+        return null
+    }
+}
+
+async function getUserProfile(): Promise<User | null> {
+    try {
+        const { data } = await axios.get(`/user/profile`)
+
+        const user = _.get(data, 'data', null)
+
+        return user
     } catch (error) {
         return null
     }
@@ -78,5 +100,6 @@ async function refreshToken(): Promise<Tokens | null> {
 export {
     register,
     signIn,
-    refreshToken
+    refreshToken,
+    getUserProfile
 }

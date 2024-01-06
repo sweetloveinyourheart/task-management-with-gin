@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: FunctionComponent<ProtectedRouteProps> = ({ children }) => {
-    const { accessToken } = useAppSelector(state => state.auth);
+    const { isAuthenticated } = useAppSelector(state => state.auth);
 
-    if (!accessToken) {
+    if (!isAuthenticated) {
         // user is not authenticated
         return <Navigate to="/sign-in" />;
     }

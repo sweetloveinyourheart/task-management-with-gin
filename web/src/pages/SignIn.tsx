@@ -5,19 +5,20 @@ import _ from 'lodash'
 import { useEffect, useState } from "react";
 
 import * as userService from "../services/user.service";
-import { storeAccessToken } from "../redux/slices/authSlice";
+import { setAuthenticatedStatus } from "../redux/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import PageLoading from "../components/Loading";
 
 function SignInPage() {
     const [error, setError] = useState<string | null>(null)
 
-    const { accessToken } = useAppSelector(state => state.auth)
+    const { isAuthenticated } = useAppSelector(state => state.auth)
     const dispatch = useAppDispatch()
     const navigate = useNavigate();
 
     useEffect(() => {
-        if(accessToken) navigate('/dashboard')
-    }, [accessToken])
+        if(isAuthenticated) navigate('/dashboard')
+    }, [isAuthenticated])
 
     const onFinish = async (values: any) => {
         // Handle form submission
@@ -29,20 +30,18 @@ function SignInPage() {
             return;
         }
 
-        const accessToken = res.tokens.access_token
-        dispatch(storeAccessToken(accessToken))
-
-        const refreshToken = res.tokens.refresh_token
-        localStorage.setItem('refresh_token', refreshToken)
+        dispatch(setAuthenticatedStatus(true))
 
         navigate("/")
     };
 
     const switchToRegister = () => navigate("/sign-up")
 
+    if(isAuthenticated) return <PageLoading />
+
     return (
         <div className="center-container">
-            <div style={{ border: "1px solid #dcdcdc", padding: 24, borderRadius: 12 }}>
+            <div style={{ border: "1px solid #dcdcdc", padding: 24, borderRadius: 12, background: "#fff" }}>
                 <Typography.Title style={{ marginBottom: 16, marginTop: 0 }}>Login to Easy Task</Typography.Title>
                 <Divider />
                 <Form

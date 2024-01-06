@@ -6,16 +6,17 @@ import { useEffect, useState } from "react";
 
 import * as userService from "../services/user.service";
 import { useAppSelector } from "../redux/hooks";
+import PageLoading from "../components/Loading";
 
 function SignUpPage() {
     const [error, setError] = useState<string | null>(null)
 
-    const { accessToken } = useAppSelector(state => state.auth)
+    const { isAuthenticated } = useAppSelector(state => state.auth)
     const navigate = useNavigate();
 
     useEffect(() => {
-        if(accessToken) navigate('/dashboard')
-    }, [accessToken])
+        if(isAuthenticated) navigate('/dashboard')
+    }, [isAuthenticated])
 
     const onFinish = async (values: any) => {
         // Handle form submission
@@ -31,9 +32,11 @@ function SignUpPage() {
 
     const switchToLogin = () => navigate("/sign-in")
 
+    if(isAuthenticated) return <PageLoading />
+
     return (
         <div className="center-container">
-            <div style={{ border: "1px solid #dcdcdc", padding: 24, borderRadius: 12 }}>
+            <div style={{ border: "1px solid #dcdcdc", padding: 24, borderRadius: 12, background: "#fff" }}>
                 <Typography.Title style={{ marginBottom: 16, marginTop: 0 }}>Register new account</Typography.Title>
                 <Divider />
                 <Form

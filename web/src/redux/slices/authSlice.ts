@@ -1,21 +1,20 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import axios from '../../helpers/axios'
 
-interface User {
-    id: string
-    email: string
-    username: string
-    full_name: string
+export interface User {
+  id: string
+  email: string
+  username: string
+  full_name: string
 }
 
 export interface AuthState {
-  accessToken: string | null
+  isAuthenticated: boolean
   user: User | null
 }
 
 const initialState: AuthState = {
-  accessToken: null,
+  isAuthenticated: false,
   user: null
 }
 
@@ -23,14 +22,21 @@ export const counterSlice = createSlice({
   name: 'counter',
   initialState,
   reducers: {
-    storeAccessToken: (state, action: PayloadAction<string>) => { 
-        state.accessToken = action.payload
-        axios.defaults.headers.common['Authorization'] = state.accessToken;
+    setAuthenticatedStatus: (state, action: PayloadAction<boolean>) => {
+      state.isAuthenticated = action.payload;
+    },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
+    logout: (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      localStorage.removeItem('refresh_token')
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { storeAccessToken } = counterSlice.actions
+export const { setAuthenticatedStatus, setUser, logout } = counterSlice.actions
 
 export default counterSlice.reducer

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { BASE_URL } from '../configs/constants'
 import { refreshToken } from '../services/user.service';
-import { storeAccessToken } from '../redux/slices/authSlice';
+import { setAuthenticatedStatus } from '../redux/slices/authSlice';
 
 const axiosInstance = axios.create({
     baseURL: BASE_URL
@@ -19,9 +19,11 @@ axiosInstance.interceptors.response.use(
             refreshToken().then(value => {
                 if (value) {
                     // Update the accessToken in Redux
-                    storeAccessToken(value.access_token);
+                    setAuthenticatedStatus(true);
                     // Update the accessToken in axios headers
-                    axios.defaults.headers.common['Authorization'] = value.access_token;
+                    axiosInstance.defaults.headers.common['Authorization'] = value.access_token;
+                } else {
+                    setAuthenticatedStatus(false)
                 }
             })
         }
