@@ -1,6 +1,7 @@
 import { FunctionComponent } from "react";
 import GlassEffect from "./GlassEffect";
-import { Col, Row } from "antd";
+import { Button, Col, Flex, Row, Select, Typography } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
 
 interface WorkspaceBarProps {
 
@@ -8,8 +9,10 @@ interface WorkspaceBarProps {
 
 const WorkspaceBar: FunctionComponent<WorkspaceBarProps> = () => {
     return (
-        <GlassEffect>
+        <GlassEffect styles={{ marginBlock: 12 }}>
             <Row gutter={[24, 24]}>
+                <Col span={6}></Col>
+                <Col span={6}></Col>
                 <Col span={6}></Col>
             </Row>
         </GlassEffect>

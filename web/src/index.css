@@ -16,6 +16,10 @@ body {
   /* Adjust this value based on your design */
 }
 
+.workspace {
+  padding: 0 50px;
+}
+
 /* GlassEffect */
 .glass-container {
   position: relative;
