@@ -127,6 +127,7 @@ func (c *UserController) UpdateUserProfile(ctx *gin.Context) {
 		return
 	}
 
+	// Get the authentication user
 	authUser, ok := user.(middlewares.AuthenticatedUser)
 	if !ok {
 		exceptions.UnauthorizedResponse(ctx, "Invalid user type")
